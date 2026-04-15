@@ -31,6 +31,7 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
   const [passengerCount, setPassengerCount] = useState(1);
   const [tollCost, setTollCost] = useState<number>(0);
   const [customConsumption, setCustomConsumption] = useState<string>("");
+  const [isCustomConsumptionChecked, setIsCustomConsumptionChecked] = useState<boolean>(false);
 
   // Fetch all cars initially
   useEffect(() => {
@@ -99,6 +100,7 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
     setSelectedEngineId("");
     setSelectedCar(null);
     setCustomConsumption("");
+    setIsCustomConsumptionChecked(false);
     localStorage.setItem("yakit_make", val);
     localStorage.removeItem("yakit_model");
     localStorage.removeItem("yakit_engine");
@@ -110,6 +112,7 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
     setSelectedEngineId("");
     setSelectedCar(null);
     setCustomConsumption("");
+    setIsCustomConsumptionChecked(false);
     localStorage.setItem("yakit_model", val);
     localStorage.removeItem("yakit_engine");
   };
@@ -120,6 +123,7 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
     const car = cars.find((c: any) => c.id === id);
     setSelectedCar(car || null);
     setCustomConsumption("");
+    setIsCustomConsumptionChecked(false);
     localStorage.setItem("yakit_engine", id.toString());
   };
 
@@ -134,7 +138,7 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
   }, [routeDetails]);
 
   // Calculations
-  const activeConsumption = customConsumption && !isNaN(parseFloat(customConsumption.replace(',', '.'))) ? parseFloat(customConsumption.replace(',', '.')) : selectedCar?.consumption;
+  const activeConsumption = (isCustomConsumptionChecked && customConsumption && !isNaN(parseFloat(customConsumption.replace(',', '.')))) ? parseFloat(customConsumption.replace(',', '.')) : selectedCar?.consumption;
 
   const baseFuelCost = (routeDetails?.distanceKm && routeDetails.distanceKm > 0 && selectedCar && fuelPrices && activeConsumption) 
     ? (routeDetails.distanceKm / 100) * activeConsumption * (selectedCar.fuel === "Benzin" ? fuelPrices.gasoline : fuelPrices.diesel)
@@ -218,18 +222,32 @@ export default function Home({ presetSlug }: { presetSlug?: string; params?: any
           
           {selectedCar && (
           <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
-            <h2 className="font-semibold text-lg mb-4 text-slate-800">3. Ekstra Seçenekler</h2>
+            <h2 className="font-semibold text-lg mb-4 text-slate-800">3. Seyahat ve Maliyet Ayarları</h2>
             
             <div className="mb-4">
-               <label className="text-sm font-medium text-slate-600 mb-2 block">Ortalama Yakıt Tüketimi (L/100km)</label>
-               <input 
-                 type="text"
-                 placeholder={selectedCar.consumption.toString()}
-                 value={customConsumption} 
-                 onChange={(e) => setCustomConsumption(e.target.value)}
-                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500"
-               />
-               <p className="text-xs text-slate-400 mt-1">Standart katalog verisi: {selectedCar.consumption} L. Kendi gerçek verinizi buraya yazarak hesabı özelleştirebilirsiniz.</p>
+               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2 cursor-pointer select-none">
+                 <input 
+                   type="checkbox"
+                   checked={isCustomConsumptionChecked}
+                   onChange={(e) => setIsCustomConsumptionChecked(e.target.checked)}
+                   className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                 />
+                 Yakıt tüketimi verisini kendim girmek istiyorum
+               </label>
+               
+               {isCustomConsumptionChecked && (
+                 <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                   <label className="text-sm font-medium text-slate-600 mb-2 block">Ortalama Yakıt Tüketimi (L/100km)</label>
+                   <input 
+                     type="text"
+                     placeholder={selectedCar.consumption.toString()}
+                     value={customConsumption} 
+                     onChange={(e) => setCustomConsumption(e.target.value)}
+                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                   />
+                   <p className="text-xs text-slate-400 mt-2">Standart katalog verisi: <strong>{selectedCar.consumption} L</strong>. Kendi gerçek verinizi buraya yazarak hesabı özelleştirebilirsiniz.</p>
+                 </div>
+               )}
             </div>
 
             <div className="mb-4 pt-4 border-t border-slate-100 mt-2">
